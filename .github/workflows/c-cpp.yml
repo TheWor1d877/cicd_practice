@@ -1,0 +1,90 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:  
+    # 1. 获取代码
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # 2. 显示欢迎信息
+    - name: Welcome message
+      run: |
+        echo "🎉 开始 CI/CD 流程！"
+        echo "📅 时间: $(date)"
+        echo "📁 工作目录: $(pwd)"
+        echo ""
+        echo "📄 项目文件:"
+        ls -la
+
+      # 3. 安装必要工具
+    - name: Install dependencies
+      run: |
+        echo "🔧 安装编译工具..."
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ build-essential
+
+      
+    # 4. 编译项目
+    - name: Build with CMake
+      run: |
+        echo "🏗️ 开始编译..."
+        mkdir -p build
+        cd build
+        cmake ..
+        make
+        echo "✅ 编译完成！"
+        echo ""
+        echo "📦 生成的文件:"
+        ls -la
+        
+    # 5. 运行测试（如果有）
+    - name: Run tests
+      run: |
+        echo "🧪 查找测试程序..."
+        cd build
+        # 查找所有可执行文件
+        for file in *; do
+          if [ -x "$file" ] && [ -f "$file" ]; then
+            if [[ "$file" == *test* ]] || [[ "$file" == *Test* ]]; then
+              echo "运行测试: $file"
+              ./$file
+            fi
+          fi
+        done
+    
+    # 6. 运行主程序
+    - name: Run main program
+      run: |
+        echo "🚀 运行主程序..."
+        cd build
+        # 查找主程序（排除test文件）
+        for file in *; do
+          if [ -x "$file" ] && [ -f "$file" ]; then
+            if [[ ! "$file" == *test* ]] && [[ ! "$file" == *Test* ]]; then
+              echo "运行程序: $file"
+              echo "================================"
+              ./$file
+              echo "================================"
+              break
+            fi
+          fi
+        done
+    
+    # 7. 完成信息
+    - name: CI Complete
+      run: |
+        echo ""
+        echo "🎊 CI/CD 流程完成！"
+        echo "✅ 所有步骤执行成功"
+        echo "📊 时间: $(date)"
+  
